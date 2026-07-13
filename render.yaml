@@ -1,12 +1,10 @@
 # Render Blueprint. Deploy this repo at https://render.com (New + > Blueprint),
-# or set the same values manually in a Web Service. If the repo is a monorepo,
-# set the service Root Directory to `server`.
+# or set the same values manually in a Web Service.
 services:
   - type: web
     name: spotify-backend
     runtime: python
     plan: free
-    rootDir: server
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /
