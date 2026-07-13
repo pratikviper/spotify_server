@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+bcrypt
+pyjwt
+pydantic
+python-multipart
+python-dotenv
+# Only needed when STORAGE_BACKEND=cloudinary:
+cloudinary
+# Only needed when STORAGE_BACKEND=s3 (AWS S3 / Cloudflare R2 / Supabase / MinIO):
+boto3

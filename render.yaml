@@ -1,0 +1,29 @@
+# Render Blueprint. Deploy this repo at https://render.com (New + > Blueprint),
+# or set the same values manually in a Web Service. If the repo is a monorepo,
+# set the service Root Directory to `server`.
+services:
+  - type: web
+    name: spotify-backend
+    runtime: python
+    plan: free
+    rootDir: server
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: STORAGE_BACKEND
+        value: cloudinary
+      # Generated securely by Render — no need to invent one.
+      - key: JWT_SECRET
+        generateValue: true
+      # Secrets: paste these in the Render dashboard (sync:false keeps them out of git).
+      - key: DATABASE_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
