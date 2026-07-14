@@ -52,15 +52,18 @@ _STREAM_CACHE: dict[str, tuple[str, float]] = {}
 _CACHE_TTL = 5 * 3600  # seconds
 _resolve_lock = threading.Lock()
 
-# 'android'/'ios' clients hand back IP-agnostic URLs (playable from the user's
-# device even though our server resolved them) and dodge the web bot-check.
+# Client selection matters a lot from a datacenter IP: YouTube bot-blocks most
+# clients there. tv / mweb / android_vr are currently the most likely to slip
+# past without cookies or a PO token.
 _YDL_OPTS = {
     'quiet': True,
     'no_warnings': True,
     'format': 'bestaudio/best',
     'noplaylist': True,
     'skip_download': True,
-    'extractor_args': {'youtube': {'player_client': ['android', 'ios']}},
+    'extractor_args': {
+        'youtube': {'player_client': ['tv', 'mweb', 'android_vr', 'ios', 'web_embedded']}
+    },
 }
 
 
