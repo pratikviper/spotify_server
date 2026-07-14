@@ -8,10 +8,25 @@ from pydantic_schemas.user_create import UserCreate
 from fastapi import APIRouter
 from sqlalchemy.orm import Session
 from pydantic_schemas.user_login import UserLogin
+from pydantic_schemas.google_login import GoogleLogin
 import jwt
-from config import JWT_SECRET
+from config import JWT_SECRET, GOOGLE_CLIENT_IDS
 from sqlalchemy.orm import joinedload
 router = APIRouter()
+
+
+def _verify_google_token(token: str) -> dict:
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+
+    # Verifies signature + expiry + issuer. Audience is checked manually below so
+    # we can accept tokens from the web / android / ios client IDs.
+    info = google_id_token.verify_oauth2_token(token, google_requests.Request())
+    if info.get('iss') not in ('accounts.google.com', 'https://accounts.google.com'):
+        raise ValueError('Wrong issuer')
+    if GOOGLE_CLIENT_IDS and info.get('aud') not in GOOGLE_CLIENT_IDS:
+        raise ValueError('Token audience is not an allowed client id')
+    return info
 
 @router.post('/signup', status_code=201)
 def signup_user(user: UserCreate, db: Session=Depends(get_db)):
@@ -47,7 +62,31 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
     
 
     token = jwt.encode({'id': user_db.id}, JWT_SECRET)
-    
+
+    return {'token': token, 'user': user_db}
+
+@router.post('/google')
+def google_login(body: GoogleLogin, db: Session = Depends(get_db)):
+    # Verify the Google ID token.
+    try:
+        info = _verify_google_token(body.token)
+    except Exception as e:
+        raise HTTPException(401, f'Invalid Google token: {e}')
+
+    email = info.get('email')
+    if not email:
+        raise HTTPException(400, 'Google account has no email')
+    name = info.get('name') or email.split('@')[0]
+
+    # Find or create the user (Google users have no password).
+    user_db = db.query(User).filter(User.email == email).first()
+    if not user_db:
+        user_db = User(id=str(uuid.uuid4()), email=email, name=name, password=None)
+        db.add(user_db)
+        db.commit()
+        db.refresh(user_db)
+
+    token = jwt.encode({'id': user_db.id}, JWT_SECRET)
     return {'token': token, 'user': user_db}
 
 @router.get('/')

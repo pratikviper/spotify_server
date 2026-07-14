@@ -7,6 +7,8 @@ pyjwt
 pydantic
 python-multipart
 python-dotenv
+# Google Sign-In token verification:
+google-auth
 # YouTube Music full-length streaming (search + on-demand stream resolution):
 ytmusicapi
 yt-dlp

@@ -20,3 +20,10 @@ DATABASE_URL = os.environ.get(
     'DATABASE_URL',
     'postgresql://postgres:test1234@localhost:5432/fluttermusicapp',
 )
+
+# --- Google Sign-In ---
+# Accept tokens whose audience is any of these OAuth client IDs (comma-separated:
+# your Web, Android and/or iOS client IDs from Google Cloud Console).
+GOOGLE_CLIENT_IDS = [
+    c.strip() for c in os.environ.get('GOOGLE_CLIENT_IDS', '').split(',') if c.strip()
+]
