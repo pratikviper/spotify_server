@@ -1,5 +1,6 @@
 import uuid
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from middleware.auth_middleware import auth_middleware
@@ -10,6 +11,22 @@ from sqlalchemy.orm import joinedload
 import storage
 
 router = APIRouter()
+
+
+@router.get('/stream/{video_id}')
+def stream_song(video_id: str):
+    """Resolve a fresh YouTube audio URL and redirect the player to it.
+
+    Songs seeded from YouTube store their song_url as this endpoint, so the app
+    plays it like any other URL; we resolve on demand (URLs are temporary).
+    No auth: the audio player fetches this URL directly without headers.
+    """
+    import youtube
+    try:
+        url = youtube.resolve_stream_url(video_id)
+    except Exception as e:
+        raise HTTPException(502, f'Could not resolve stream: {e}')
+    return RedirectResponse(url)
 
 @router.post('/upload', status_code=201)
 def upload_song(request: Request,
